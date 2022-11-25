@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load thumbnail %}
+{% block title %}Подписки{% endblock %}
+{% block content %}
+  <div class="container py-5">
+    {% load cache %}
+    {% include 'posts/includes/switcher.html' %}
+    {% cache 20 index_page %}
+    {% for post in page_obj %}
+      <ul>
+        <li>
+          Автор: {% if post.author.get_full_name %}{{ post.author.get_full_name }}{% else %}{{ post.author }}{% endif %} <a href="{% url 'posts:profile' post.author %}">все посты пользователя</a>
+        </li>
+        {% include "posts/includes/post.html" %}
+        <a href="{% url 'posts:post_detail' post.id %}">подробная информация</a><br>
+        {% if post.group %}
+          <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
+        {% endif %}
+        {% if not forloop.last %}<hr>{% endif %}
+    {% endfor %}
+    {% endcache %}
+    {% include "includes/paginator.html" %}
+  </div>
+{% endblock %}

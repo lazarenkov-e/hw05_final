@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# static files
+yatube/static
+
+# media files
+media
+
 # C extensions
 *.so
 
@@ -144,9 +150,3 @@ dmypy.json
 .history/
 
 .mypy_cache
-
-# папки со статикой и медиа
-static/
-yatube/posts/static/
-yatube/media/
-
