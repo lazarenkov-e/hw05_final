@@ -3,14 +3,15 @@ import tempfile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from mixer.backend.django import mixer
 
-from posts.models import Group, Post, User, Comment
+from posts.models import Comment, Group, Post
+from posts.tests.common import image
 
 User = get_user_model()
+
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
@@ -36,23 +37,10 @@ class PostFormTests(TestCase):
 
     def test_auth_create_post(self):
         group = mixer.blend('posts.Group')
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif',
-        )
         data = {
             'text': 'Текст поста',
             'group': group.id,
-            'image': uploaded,
+            'image': image(),
         }
         self.auth.post(
             reverse('posts:post_create'),
@@ -85,9 +73,6 @@ class PostFormTests(TestCase):
             follow=True,
         )
         post.refresh_from_db()
-        self.assertFalse(
-            Post.objects.filter(text='Текст, которого нет').exists(),
-        )
         self.assertEqual(post.author, self.user_author)
         self.assertEqual(post.text, 'Тестовый текст')
 
@@ -133,7 +118,6 @@ class PostFormTests(TestCase):
 
     def test_auth_can_add_comment(self):
         post = mixer.blend('posts.Post')
-        comments_count = Comment.objects.count()
         comment_form = {
             'text': 'Текст',
         }
@@ -142,7 +126,7 @@ class PostFormTests(TestCase):
             data=comment_form,
             follow=True,
         )
-        self.assertEqual(Comment.objects.count(), comments_count + 1)
+        self.assertEqual(Comment.objects.count(), 1)
 
     def test_anon_cant_add_comment(self):
         post = mixer.blend('posts.Post')

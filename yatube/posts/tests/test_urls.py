@@ -5,8 +5,6 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from mixer.backend.django import mixer
 
-from posts.models import Follow
-
 User = get_user_model()
 
 
@@ -34,6 +32,14 @@ class PostUrlTest(TestCase):
             'post_create': reverse('posts:post_create'),
             'post_edit': reverse('posts:post_edit', args=(cls.post.id,)),
             'missing': '/unexisting_page/',
+            'follow_profile': reverse(
+                'posts:profile_follow',
+                args=(cls.user_author.username,),
+            ),
+            'unfollow_profile': reverse(
+                'posts:profile_unfollow',
+                args=(cls.user_author.username,),
+            ),
         }
 
     def test_http_statuses(self) -> None:
@@ -46,6 +52,8 @@ class PostUrlTest(TestCase):
             (self.urls.get('post_create'), HTTPStatus.OK, self.auth),
             (self.urls.get('post_edit'), HTTPStatus.FOUND, self.auth),
             (self.urls.get('post_edit'), HTTPStatus.OK, self.author),
+            (self.urls.get('follow_profile'), HTTPStatus.FOUND, self.auth),
+            (self.urls.get('unfollow_profile'), HTTPStatus.FOUND, self.auth),
         )
         for address, status, person in httpstatuses:
             with self.subTest(address=address):
@@ -95,21 +103,3 @@ class PostUrlTest(TestCase):
         for address, redirect, person in redirects:
             with self.subTest(address=address):
                 self.assertRedirects(person.get(address), redirect)
-
-    def test_follow_url(self):
-        author = mixer.blend(User)
-        response = self.auth.get(
-            f'/profile/{author.username}/follow/',
-        )
-        self.assertRedirects(response, f'/profile/{author.username}/')
-
-    def test_unfollow_url(self):
-        author = mixer.blend(User)
-        Follow.objects.create(
-            user=self.user,
-            author=author,
-        )
-        response = self.auth.get(
-            f'/profile/{author.username}/unfollow/',
-        )
-        self.assertRedirects(response, f'/profile/{author.username}/')

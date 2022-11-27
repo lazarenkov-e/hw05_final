@@ -2,20 +2,22 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from posts.forms import CommentForm, PostForm
 
 from core.utils import paginate
-from posts.forms import PostForm
-from posts.models import Group, Post, User, Follow
+from posts.forms import CommentForm, PostForm
+from posts.models import Follow, Group, Post, User
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    posts = Post.objects.select_related('group')
     return render(
         request,
         'posts/index.html',
         {
-            'page_obj': paginate(request, posts, settings.NUMBER_OF_POSTS),
+            'page_obj': paginate(
+                request,
+                Post.objects.select_related('group'),
+                settings.NUMBER_OF_POSTS,
+            ),
         },
     )
 
@@ -36,9 +38,10 @@ def group_posts(request: HttpRequest, slug: str) -> HttpResponse:
 def profile(request: HttpRequest, username: str) -> HttpResponse:
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('author')
-    following = request.user.is_authenticated
-    if following:
-        following = author.following.filter(user=request.user).exists()
+    following = (
+        request.user.is_authenticated
+        and author.following.filter(user=request.user).exists()
+    )
     return render(
         request,
         'posts/profile.html',
@@ -51,16 +54,12 @@ def profile(request: HttpRequest, username: str) -> HttpResponse:
 
 
 def post_detail(request: HttpRequest, post_id: int) -> HttpResponse:
-    post = get_object_or_404(Post, pk=post_id)
-    form = CommentForm(request.POST or None)
-    comments = post.comments.all()
     return render(
         request,
         'posts/post_detail.html',
         {
-            'post': post,
-            'form': form,
-            'comments': comments,
+            'post': get_object_or_404(Post, pk=post_id),
+            'form': CommentForm(request.POST or None),
         },
     )
 
@@ -112,11 +111,9 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    posts = Post.objects.filter(
-        author__following__user=request.user).order_by('-pub_date')
-    page_obj = paginate(request, posts, settings.NUMBER_OF_POSTS)
-    context = {'page_obj': page_obj}
-    return render(request, 'posts/follow.html', context)
+    posts = Post.objects.filter(author__following__user=request.user)
+    page = paginate(request, posts, settings.NUMBER_OF_POSTS)
+    return render(request, 'posts/follow.html', {'page_obj': page})
 
 
 @login_required
@@ -129,10 +126,8 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    user_follower = get_object_or_404(
-        Follow,
+    Follow.objects.filter(
         user=request.user,
-        author__username=username,
-    )
-    user_follower.delete()
+        author=User.objects.get(username=username),
+    ).delete()
     return redirect('posts:profile', username)

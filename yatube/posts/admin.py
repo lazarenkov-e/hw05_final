@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from core.admin import BaseAdmin
-from posts.models import Group, Post
+from posts.models import Comment, Follow, Group, Post
 
 
 @admin.register(Post)
@@ -27,3 +27,25 @@ class GroupAdmin(BaseAdmin):
     )
     search_fields = ('description',)
     list_filter = ('slug',)
+
+
+@admin.register(Comment)
+class CommentAdmin(BaseAdmin):
+    list_display = (
+        'post',
+        'author',
+        'text',
+        'created',
+    )
+    search_fields = ('text',)
+    list_filter = ('created',)
+
+
+@admin.register(Follow)
+class FollowAdmin(BaseAdmin):
+    list_display = (
+        'user',
+        'author',
+    )
+    search_fields = ('user', 'author')
+    list_filter = ('user', 'author')

@@ -5,14 +5,15 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from mixer.backend.django import mixer
 
-from posts.models import Post, User, Comment, Follow
+from posts.models import Comment, Follow, Post
+from posts.tests.common import image
 
 User = get_user_model()
+
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
@@ -23,30 +24,20 @@ class PostPagesTests(TestCase):
         super().setUpClass()
         cls.user = mixer.blend(User, username='user')
         cls.user_author = mixer.blend(User, username='author')
+
         cls.anon = Client()
         cls.auth = Client()
         cls.author = Client()
+
         cls.auth.force_login(cls.user)
         cls.author.force_login(cls.user_author)
+
         cls.group = mixer.blend('posts.Group', slug='test-group')
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif',
-        )
         cls.post = mixer.blend(
             'posts.Post',
             author=cls.user_author,
             group=cls.group,
-            image=uploaded,
+            image=image(),
         )
         cls.comment = Comment.objects.create(
             text='Тестовый комментарий',
@@ -279,22 +270,27 @@ class FollowViewsTest(TestCase):
     def test_follower_user_can_follow_author(self):
         url = reverse('posts:profile_follow', args=(self.author,))
         self.auth.get(url)
-        self.assertTrue(Follow.objects.filter(
-            user=self.follower,
-            author=self.author,
-        ).exists())
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.follower,
+                author=self.author,
+            ).exists(),
+        )
 
     def test_follower_user_can_unfollow_author(self):
         Follow.objects.create(user=self.follower, author=self.author)
         url = reverse(
-            'posts:profile_unfollow', args=(self.author,),
+            'posts:profile_unfollow',
+            args=(self.author,),
         )
         self.auth.get(url)
 
-        self.assertFalse(Follow.objects.filter(
-            user=self.follower,
-            author=self.author,
-        ).exists())
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.follower,
+                author=self.author,
+            ).exists(),
+        )
 
     def test_new_authors_post_exists_in_followers_feed(self):
         Follow.objects.create(user=self.follower, author=self.author)
@@ -302,7 +298,8 @@ class FollowViewsTest(TestCase):
         response = self.auth.get(url)
 
         self.assertEqual(
-            response.context['page_obj'][0].text, self.post.text,
+            response.context['page_obj'][0].text,
+            self.post.text,
         )
 
     def test_new_authors_post_notexists_in_unfollowers_feed(self):

@@ -58,7 +58,7 @@ class Comment(models.Model):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        verbose_name='Комментарий',
+        verbose_name='комментарий',
         related_name='comments',
     )
     author = models.ForeignKey(
@@ -67,16 +67,17 @@ class Comment(models.Model):
         related_name='comments',
     )
     text = models.TextField(
-        verbose_name='Текст комментария',
+        verbose_name='текст комментария',
         help_text='Введите текст комментария',
     )
 
     created = models.DateTimeField(
-        verbose_name='Дата публикации',
+        verbose_name='дата публикации',
         auto_now_add=True,
     )
 
     class Meta:
+        verbose_name = 'комментарий'
         ordering = ('-created',)
 
     def __str__(self) -> str:
@@ -88,18 +89,18 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='follower',
-        verbose_name='Пользователь',
+        verbose_name='пользователь',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name='Автор',
+        verbose_name='автор',
     )
 
     class Meta:
         verbose_name_plural = 'Подписки'
-        verbose_name = 'Подписка'
+        verbose_name = 'подписка'
 
     def __str__(self):
         return f'{self.user} подписался на {self.author}'
