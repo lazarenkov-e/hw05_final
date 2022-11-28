@@ -130,7 +130,6 @@ class PostFormTests(TestCase):
 
     def test_anon_cant_add_comment(self):
         post = mixer.blend('posts.Post')
-        comments_count = Comment.objects.count()
         comment_form = {
             'text': 'Текст',
         }
@@ -139,4 +138,4 @@ class PostFormTests(TestCase):
             data=comment_form,
             follow=True,
         )
-        self.assertEqual(Comment.objects.count(), comments_count)
+        self.assertEqual(Comment.objects.count(), 0)

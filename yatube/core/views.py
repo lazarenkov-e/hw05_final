@@ -1,9 +1,11 @@
 from http import HTTPStatus
 
+from django.http import HttpRequest
 from django.shortcuts import render
 
 
-def page_not_found(request, exception):
+def page_not_found(request: HttpRequest, exception) -> None:
+    del exception
     return render(
         request,
         'core/404.html',
@@ -12,11 +14,11 @@ def page_not_found(request, exception):
     )
 
 
-def csrf_failure(request, reason=''):
+def csrf_failure(request: HttpRequest, reason=''):
     return render(request, 'core/403csrf.html')
 
 
-def server_error(request):
+def server_error(request: HttpRequest):
     return render(
         request,
         'core/500.html',
@@ -24,5 +26,6 @@ def server_error(request):
     )
 
 
-def permission_denied(request, exception):
+def permission_denied(request: HttpRequest, exception):
+    del exception
     return render(request, 'core/403.html', status=HTTPStatus.FORBIDDEN)
