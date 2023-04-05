@@ -4,10 +4,10 @@ __pycache__/
 *$py.class
 
 # static files
-yatube/static
+# yatube/static
 
 # media files
-media
+# media
 
 # C extensions
 *.so

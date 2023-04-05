@@ -15,6 +15,8 @@ CACHES = {
 }
 
 ALLOWED_HOSTS = [
+    'www.elazarenkov.pythonanywhere.com',
+    'elazarenkov.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
     '[::1]',
@@ -41,6 +43,11 @@ INSTALLED_APPS = [
     'posts.apps.PostsConfig',
     'users.apps.UsersConfig',
     'sorl.thumbnail',
+    'debug_toolbar',
+]
+
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]
 
 MIDDLEWARE = [
@@ -51,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 MEDIA_URL = '/media/'
